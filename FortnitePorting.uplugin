@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.8",
+	"FriendlyName": "FortnitePorting",
+	"Description": "Unreal Server for Fortnite Porting",
+	"Category": "Import",
+	"CreatedBy": "Half",
+	"CreatedByURL": "https://github.com/halfuwu",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "FortnitePorting",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
