@@ -25,7 +25,7 @@ public class FortnitePorting : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core"
+				"Core", "Networking"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
