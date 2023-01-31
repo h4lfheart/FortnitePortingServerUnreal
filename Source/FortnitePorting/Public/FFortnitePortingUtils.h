@@ -1,10 +1,9 @@
 ﻿#pragma once
 
-#include "json/single_include/nlohmann/json.hpp"
-
 class FFortnitePortingUtils
 {
 public:
 	static void ImportResponse(FString Response);
-	static FString GetString(nlohmann::basic_json<>& Data, std::string Name);
+	static FString BytesToString(TArray<uint8>& Message, int BytesLength);
+	static TArray<uint8> StringToBytes(const FString& InStr);
 };

@@ -1,5 +1,4 @@
 #include "FortnitePorting.h"
-
 #include "FListenServer.h"
 
 #define LOCTEXT_NAMESPACE "FFortnitePortingModule"
@@ -19,5 +18,5 @@ void FFortnitePortingModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FFortnitePortingModule, FortnitePorting)

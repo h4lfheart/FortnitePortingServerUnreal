@@ -32,34 +32,36 @@ uint32 FListenServer::Run()
 
 	auto BufferSize = 1024;
 	Socket = FUdpSocketBuilder(TEXT("FortnitePortingServerSocket"))
-		.AsBlocking()
-		.AsReusable()
-		.WithReceiveBufferSize(BufferSize)
-		.BoundToEndpoint(Endpoint)
-		.Build();
+	         .AsBlocking()
+	         .AsReusable()
+	         .WithReceiveBufferSize(BufferSize)
+	         .BoundToEndpoint(Endpoint)
+	         .Build();
 
 	const auto Address = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
 	while (bRunThread)
 	{
 		FString Data;
-		
+
 		// Chunk Receive Loop
 		while (true)
 		{
 			auto BytesRead = 0;
 			TArray<uint8> RawData;
 			RawData.SetNumUninitialized(BufferSize);
-				
+
 			if (Socket->RecvFrom(RawData.GetData(), BufferSize, BytesRead, *Address))
 			{
 				// Uncompressed Messages
-				auto ReceivedString = BytesToString(RawData, BytesRead);
-					
+				auto ReceivedString = FFortnitePortingUtils::BytesToString(RawData, BytesRead);
+
+				UE_LOG(LogFortnitePorting, Log, TEXT("%s"), *ReceivedString);
+				
 				if (ReceivedString.Equals("MessageFinished", ESearchCase::IgnoreCase))
 				{
 					break;
 				}
-					
+
 				if (ReceivedString.Equals("Ping", ESearchCase::IgnoreCase))
 				{
 					PingClient(*Address);
@@ -72,8 +74,11 @@ uint32 FListenServer::Run()
 			}
 		}
 
-		FFortnitePortingUtils::ImportResponse(Data);
+		// Decompression for Gzip.
+		// auto Uncompressed = FCompression::UncompressMemory(NAME_Gzip, UncompressedContent.GetData(), UncompressedContent.Num(),
+		//                                                    RawData.GetData(), RawData.Num());
 
+		FFortnitePortingUtils::ImportResponse(Data);
 	}
 
 	return 0;
@@ -87,56 +92,7 @@ void FListenServer::Stop()
 
 void FListenServer::PingClient(const FInternetAddr& Destination) const
 {
-	auto PingString = StringToBytes("Ping");
+	TArray<uint8> Ping = FFortnitePortingUtils::StringToBytes("Ping");
 	auto BytesSent = 0;
-	Socket->SendTo(PingString.GetData(), PingString.Num(), BytesSent, Destination);
+	Socket->SendTo(Ping.GetData(), Ping.Num(), BytesSent, Destination);
 }
-
-FString FListenServer::BytesToString(TArray<uint8>& Message, int32 BytesLength)
-{
-	if (BytesLength <= 0)
-	{
-		return FString("");
-	}
-	if (Message.Num() < BytesLength)
-	{
-		return FString("");
-	}
-
-	TArray<uint8> StringAsArray;
-	StringAsArray.Reserve(BytesLength);
-
-	for (int i = 0; i < BytesLength; i++)
-	{
-		StringAsArray.Add(Message[0]);
-		Message.RemoveAt(0);
-	}
-
-	std::string cstr(reinterpret_cast<const char*>(StringAsArray.GetData()), StringAsArray.Num());
-	return FString(UTF8_TO_TCHAR(cstr.c_str()));
-}
-
-TArray<uint8> FListenServer::StringToBytes(const FString& InStr) const
-{
-	const FTCHARToUTF8 Convert(*InStr);
-	const auto BytesLength = Convert.Length();
-	const auto MessageBytes = static_cast<uint8*>(FMemory::Malloc(BytesLength));
-	FMemory::Memcpy(MessageBytes, TCHAR_TO_UTF8(InStr.GetCharArray().GetData()), BytesLength);
-
-	TArray<uint8> Result;
-	for (auto i = 0; i < BytesLength; i++)
-	{
-		Result.Add(MessageBytes[i]);
-	}
-
-	FMemory::Free(MessageBytes);
-
-	return Result;
-}
-
-
-
-
-
-
-

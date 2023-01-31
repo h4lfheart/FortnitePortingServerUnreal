@@ -17,7 +17,5 @@ private:
 	FRunnableThread* Thread;
 	FSocket* Socket;
 
-	TArray<uint8> StringToBytes(const FString& InStr) const;
-	static FString BytesToString(TArray<uint8>& Message, int32 BytesLength);
 	void PingClient(const FInternetAddr& Destination) const;
 };
