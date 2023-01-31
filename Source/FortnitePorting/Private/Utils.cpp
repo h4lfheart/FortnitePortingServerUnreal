@@ -1,8 +1,10 @@
-﻿#include "FFortnitePortingUtils.h"
+﻿#include "FortnitePorting/Public/Utils.h"
+
+#include "ExportModel.h"
 #include "FortnitePorting.h"
 #include "JsonObjectConverter.h"
 
-void FFortnitePortingUtils::ImportResponse(const FString Response)
+void FUtils::ImportResponse(const FString Response)
 {
 	FExport Export;
 	if (!FJsonObjectConverter::JsonObjectStringToUStruct(Response, &Export))
@@ -11,17 +13,31 @@ void FFortnitePortingUtils::ImportResponse(const FString Response)
 		return;
 	}
 
-	FString AssetsRoot = Export.AssetsRoot;
-	FExportSettings Settings = Export.Settings;
-	TArray<FExportDataBase> Data = Export.Data;
+	auto AssetsRoot = Export.AssetsRoot;
+	auto Settings = Export.Settings;
+	auto BaseData = Export.Data;
 
-	for (auto [Name, Type] : Data)
+	for (auto Data : BaseData)
 	{
+		auto Name = Data.Name;
+		auto Type = Data.Type;
 		UE_LOG(LogFortnitePorting, Log, TEXT("Importing %s (%s)"), *Name, *Type)
+
+		if (Type.Equals("Dance"))
+		{
+			// TODO
+		}
+		else
+		{
+			for (auto Mesh : Data.Parts)
+			{
+				UE_LOG(LogFortnitePorting, Log, TEXT("%s"), *Mesh.MeshPath)
+			}
+		}
 	}
 }
 
-FString FFortnitePortingUtils::BytesToString(TArray<uint8>& Message, const int BytesLength)
+FString FUtils::BytesToString(TArray<uint8>& Message, int32 BytesLength)
 {
 	if (BytesLength <= 0)
 	{
@@ -41,10 +57,11 @@ FString FFortnitePortingUtils::BytesToString(TArray<uint8>& Message, const int B
 		Message.RemoveAt(0);
 	}
 
-	return FString(reinterpret_cast<const char*>(StringAsArray.GetData()), StringAsArray.Num());
+	std::string cstr(reinterpret_cast<const char*>(StringAsArray.GetData()), StringAsArray.Num());
+	return FString(UTF8_TO_TCHAR(cstr.c_str()));
 }
 
-TArray<uint8> FFortnitePortingUtils::StringToBytes(const FString& InStr)
+TArray<uint8> FUtils::StringToBytes(const FString& InStr)
 {
 	const FTCHARToUTF8 Convert(*InStr);
 	const auto BytesLength = Convert.Length();

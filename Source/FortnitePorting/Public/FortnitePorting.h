@@ -1,9 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FListenServer.h"
+#include "ListenServer.h"
 #include "Modules/ModuleManager.h"
-#include "FortnitePorting.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFortnitePorting, Log, All);
 
@@ -15,39 +14,4 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
-};
-
-USTRUCT()
-struct FExportDataBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FString Name;
-
-	UPROPERTY()
-	FString Type;
-};
-
-USTRUCT()
-struct FExportSettings
-{
-	GENERATED_BODY()
-
-	// TODO
-};
-
-USTRUCT()
-struct FExport
-{
-	GENERATED_BODY()
-	
-	UPROPERTY()
-	FString AssetsRoot;
-
-	UPROPERTY()
-	TArray<FExportDataBase> Data;
-
-	UPROPERTY()
-	FExportSettings Settings;
 };

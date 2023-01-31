@@ -1,9 +1,7 @@
-﻿#include "FListenServer.h"
-
-#include "FFortnitePortingUtils.h"
-#include "FortnitePorting.h"
+﻿#include "ListenServer.h"
 #include "SocketSubsystem.h"
 #include "Common/UdpSocketBuilder.h"
+#include "FortnitePorting/Public/Utils.h"
 
 FListenServer::FListenServer()
 {
@@ -53,10 +51,7 @@ uint32 FListenServer::Run()
 			if (Socket->RecvFrom(RawData.GetData(), BufferSize, BytesRead, *Address))
 			{
 				// Uncompressed Messages
-				auto ReceivedString = FFortnitePortingUtils::BytesToString(RawData, BytesRead);
-
-				UE_LOG(LogFortnitePorting, Log, TEXT("%s"), *ReceivedString);
-				
+				auto ReceivedString = FUtils::BytesToString(RawData, BytesRead);
 				if (ReceivedString.Equals("MessageFinished", ESearchCase::IgnoreCase))
 				{
 					break;
@@ -78,7 +73,7 @@ uint32 FListenServer::Run()
 		// auto Uncompressed = FCompression::UncompressMemory(NAME_Gzip, UncompressedContent.GetData(), UncompressedContent.Num(),
 		//                                                    RawData.GetData(), RawData.Num());
 
-		FFortnitePortingUtils::ImportResponse(Data);
+		FUtils::ImportResponse(Data);
 	}
 
 	return 0;
@@ -92,7 +87,7 @@ void FListenServer::Stop()
 
 void FListenServer::PingClient(const FInternetAddr& Destination) const
 {
-	TArray<uint8> Ping = FFortnitePortingUtils::StringToBytes("Ping");
+	TArray<uint8> Ping = FUtils::StringToBytes("Ping");
 	auto BytesSent = 0;
 	Socket->SendTo(Ping.GetData(), Ping.Num(), BytesSent, Destination);
 }

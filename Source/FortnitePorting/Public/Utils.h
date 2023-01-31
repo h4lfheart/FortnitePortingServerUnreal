@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-class FFortnitePortingUtils
+class FUtils
 {
 public:
 	static void ImportResponse(FString Response);
