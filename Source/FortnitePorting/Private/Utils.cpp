@@ -3,6 +3,8 @@
 #include "ExportModel.h"
 #include "FortnitePorting.h"
 #include "JsonObjectConverter.h"
+#include "PskFactory.h"
+#include "PskReader.h"
 
 void FUtils::ImportResponse(const FString Response)
 {
@@ -12,6 +14,8 @@ void FUtils::ImportResponse(const FString Response)
 		UE_LOG(LogFortnitePorting, Error, TEXT("Unable to deserialize response from FortnitePorting."));
 		return;
 	}
+
+	CurrentExport = Export;
 
 	auto AssetsRoot = Export.AssetsRoot;
 	auto Settings = Export.Settings;
@@ -32,6 +36,7 @@ void FUtils::ImportResponse(const FString Response)
 			for (auto Mesh : Data.Parts)
 			{
 				UE_LOG(LogFortnitePorting, Log, TEXT("%s"), *Mesh.MeshPath)
+				ImportMesh(Mesh.MeshPath);
 			}
 		}
 	}
@@ -76,4 +81,30 @@ TArray<uint8> FUtils::StringToBytes(const FString& InStr)
 
 	FMemory::Free(MessageBytes);
 	return Result;
+}
+
+void FUtils::ImportMesh(const FString Filepath)
+{
+	FString Path;
+	FString ObjectName;
+	Filepath.Split(".", &Path, &ObjectName);
+
+	FString Folder;
+	FString PackageName;
+	Path.Split(TEXT("/"), &Folder, &PackageName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+
+	auto MeshPath = FPaths::Combine(CurrentExport.AssetsRoot, Path + "_LOD0");
+	if (FPaths::FileExists(MeshPath + ".psk"))
+	{
+		MeshPath += ".psk";
+	}
+	if (FPaths::FileExists(MeshPath + ".pskx"))
+	{
+		MeshPath += ".pskx";
+	}
+	
+	AsyncTask(ENamedThreads::GameThread, [MeshPath, Folder, ObjectName]
+	{
+		UPskFactory::Import(MeshPath, CreatePackage(*Folder), FName(*ObjectName), RF_Public | RF_Standalone);
+	});
 }

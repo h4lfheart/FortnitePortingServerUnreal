@@ -25,7 +25,7 @@ public class FortnitePorting : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "Networking", "Json", "JsonUtilities"
+				"Core", "Networking", "Json", "JsonUtilities", "UnrealPSKPSA"
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
@@ -39,7 +39,8 @@ public class FortnitePorting : ModuleRules
 				"Slate",
 				"SlateCore",
 				"Sockets",
-				"Networking"
+				"Networking",
+				"UnrealPSKPSA"
 			}
 		);
 
