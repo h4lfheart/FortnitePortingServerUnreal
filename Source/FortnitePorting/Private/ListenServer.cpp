@@ -28,7 +28,7 @@ uint32 FListenServer::Run()
 	FIPv4Endpoint Endpoint;
 	FIPv4Endpoint::Parse(TEXT("127.0.0.1:24281"), Endpoint);
 
-	auto BufferSize = 1024;
+	const auto BufferSize = 1024;
 	Socket = FUdpSocketBuilder(TEXT("FortnitePortingServerSocket"))
 	         .AsBlocking()
 	         .AsReusable()
