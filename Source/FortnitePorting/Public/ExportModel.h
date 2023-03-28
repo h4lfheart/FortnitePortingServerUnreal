@@ -15,6 +15,9 @@ struct FTextureParameter
 	
 	UPROPERTY()
 	bool sRGB;
+	
+	UPROPERTY()
+    TEnumAsByte<TextureCompressionSettings> CompressionSettings;
 };
 
 USTRUCT()

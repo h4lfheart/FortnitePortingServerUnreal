@@ -207,7 +207,7 @@ UTexture* FUtils::ImportTexture(const FTextureParameter& Texture)
 	bool bCancelled;
 	const auto ImportedTexture = Cast<UTexture>(Factory->FactoryCreateFile(UTexture2D::StaticClass(), TexturePackage, FName(*ObjectName), RF_Public | RF_Standalone, TexturePath, nullptr, GWarn, bCancelled));
 	ImportedTexture->SRGB = Texture.sRGB;
-	// TODO COMPRESSION TYPES
+	ImportedTexture->CompressionSettings = Texture.CompressionSettings;
 
 	ImportedTexture->MarkPackageDirty();
 	FAssetRegistryModule::AssetCreated(ImportedTexture);
