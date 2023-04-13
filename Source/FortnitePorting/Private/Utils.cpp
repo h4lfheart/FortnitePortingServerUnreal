@@ -10,6 +10,7 @@
 #include "ObjectTools.h"
 #include "PskFactory.h"
 #include "PskReader.h"
+#include "PskxFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Async/Async.h"
 #include "Factories/TextureFactory.h"
@@ -121,6 +122,8 @@ auto FUtils::SplitExportPath(const FString& InStr)
 	FString ObjectName;
 	InStr.Split(".", &Path, &ObjectName);
 
+	const auto bIsGameFeatureFixNeeded = !Path.StartsWith("/Game");
+
 	FString Folder;
 	FString PackageName;
 	Path.Split(TEXT("/"), &Folder, &PackageName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
@@ -130,34 +133,51 @@ auto FUtils::SplitExportPath(const FString& InStr)
 		FString Path;
 		FString ObjectName;
 		FString Folder;
+		
+		bool bIsGameFeatureFixNeeded;
+		FString GameFeatureFixPath;
+		FString GameFeatureFixFolder;
+
+		FString GetUnrealPath()
+		{
+			return bIsGameFeatureFixNeeded ? GameFeatureFixPath : Path;
+		}
+
+		FString GetUnrealFolder()
+		{
+			return bIsGameFeatureFixNeeded ? GameFeatureFixFolder : Folder;
+		}
 	};
 	
 	return FSplitResult {
 		Path,
 		ObjectName,
 		Folder,
+		bIsGameFeatureFixNeeded,
+		"/Game" + Path,
+		"/Game" + Folder
 	};
 }
 
 UObject* FUtils::ImportMesh(const FExportMesh& Mesh)
 {
-	auto [Path, ObjectName, Folder] = SplitExportPath(Mesh.MeshPath);
+	auto SplitMeshData = SplitExportPath(Mesh.MeshPath);
 
 	TMap<FString, FString> MaterialNameToPathMap;
 	for (auto Material : Mesh.Materials)
 	{
-		auto [MatPath, MatObjectName, MatFolder] = SplitExportPath(Material.MaterialPath);
-		MaterialNameToPathMap.Add(Material.MaterialName, MatFolder);
+		auto SplitMatData = SplitExportPath(Material.MaterialPath);
+		MaterialNameToPathMap.Add(Material.MaterialName, SplitMatData.GetUnrealFolder());
 	}
 	
-	auto MeshPath = FPaths::Combine(CurrentExport.AssetsRoot, Path + "_LOD0");
+	auto MeshPath = FPaths::Combine(CurrentExport.AssetsRoot, SplitMeshData.Path + "_LOD0");
 	if (FPaths::FileExists(MeshPath + ".psk"))
 	{
-		return UPskFactory::Import(MeshPath + ".psk", CreatePackage(*Folder), FName(*ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
+		return UPskFactory::Import(MeshPath + ".psk", CreatePackage(*SplitMeshData.GetUnrealFolder()), FName(*SplitMeshData.ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
 	}
 	if (FPaths::FileExists(MeshPath + ".pskx"))
 	{
-		MeshPath += ".pskx";
+		return UPskxFactory::Import(MeshPath + ".pskx", CreatePackage(*SplitMeshData.GetUnrealFolder()), FName(*SplitMeshData.ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
 	}
 	
 	return nullptr;
@@ -165,12 +185,18 @@ UObject* FUtils::ImportMesh(const FExportMesh& Mesh)
 
 void FUtils::ImportMaterial(const FExportMaterial& Material)
 {
-	auto [Path, ObjectName, Folder] = SplitExportPath(Material.MaterialPath);
-	const auto MaterialInstance = LoadObject<UMaterialInstanceConstant>(CreatePackage(*Path), *ObjectName);
+	auto SplitMatData = SplitExportPath(Material.MaterialPath);
+	const auto PathPackage = CreatePackage(*SplitMatData.GetUnrealPath());
+	auto MaterialInstance = LoadObject<UMaterialInstanceConstant>(PathPackage, *SplitMatData.ObjectName);
+	if (MaterialInstance == nullptr)
+	{
+		MaterialInstance = NewObject<UMaterialInstanceConstant>(PathPackage, *SplitMatData.ObjectName);
+	}
 	MaterialInstance->Parent = FFortnitePortingModule::DefaultMaterial;
 
 	for (auto TextureParameter : Material.Textures)
 	{
+		// TODO Mappings
 		const auto Texture = ImportTexture(TextureParameter);
 		if (TextureParameter.Name.Equals("Diffuse"))
 		{
@@ -200,12 +226,12 @@ UTexture* FUtils::ImportTexture(const FTextureParameter& Texture)
 	Factory->NoCompression = true;
 	Factory->AutomatedImportData = AutomatedData;
 		
-	auto [Path, ObjectName, Folder] = SplitExportPath(Texture.Value);
-	const auto TexturePath = FPaths::Combine(CurrentExport.AssetsRoot, Path + ".png");
-	const auto TexturePackage = CreatePackage(*Path);
+	auto SplitTexData = SplitExportPath(Texture.Value);
+	const auto TexturePath = FPaths::Combine(CurrentExport.AssetsRoot, SplitTexData.Path + ".png");
+	const auto TexturePackage = CreatePackage(*SplitTexData.GetUnrealPath());
 		
 	bool bCancelled;
-	const auto ImportedTexture = Cast<UTexture>(Factory->FactoryCreateFile(UTexture2D::StaticClass(), TexturePackage, FName(*ObjectName), RF_Public | RF_Standalone, TexturePath, nullptr, GWarn, bCancelled));
+	const auto ImportedTexture = Cast<UTexture2D>(Factory->FactoryCreateFile(UTexture2D::StaticClass(), TexturePackage, FName(*SplitTexData.ObjectName), RF_Public | RF_Standalone, TexturePath, nullptr, GWarn, bCancelled));
 	ImportedTexture->SRGB = Texture.sRGB;
 	ImportedTexture->CompressionSettings = Texture.CompressionSettings;
 
