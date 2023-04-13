@@ -4,7 +4,7 @@
 	"VersionName": "1.0.8",
 	"FriendlyName": "FortnitePorting",
 	"Description": "Unreal Server for Fortnite Porting",
-	"Category": "Import",
+	"Category": "Importers",
 	"CreatedBy": "Half",
 	"CreatedByURL": "https://github.com/halfuwu",
 	"DocsURL": "",
