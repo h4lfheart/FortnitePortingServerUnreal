@@ -7,13 +7,13 @@
 #include "ExportModel.h"
 #include "FortnitePorting.h"
 #include "JsonObjectConverter.h"
-#include "ObjectTools.h"
+#include "PluginUtils.h"
 #include "PskFactory.h"
-#include "PskReader.h"
 #include "PskxFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Async/Async.h"
 #include "Factories/TextureFactory.h"
+#include "Interfaces/IPluginManager.h"
 #include "Materials/MaterialInstanceConstant.h"
 
 void FUtils::ImportResponse(const FString& Response)
@@ -35,10 +35,10 @@ void FUtils::ImportResponse(const FString& Response)
 		CurrentExport = Export;
 
 		auto AssetsRoot = Export.AssetsRoot;
-		auto Settings = Export.Settings;
+		//auto Settings = Export.Settings;
 		auto BaseData = Export.Data;
 
-		for (auto Data : BaseData)
+		for (const auto Data : BaseData)
 		{
 			auto Name = Data.Name;
 			auto Type = Data.Type;
@@ -118,11 +118,32 @@ TArray<uint8> FUtils::StringToBytes(const FString& InStr)
 
 auto FUtils::SplitExportPath(const FString& InStr)
 {
+	auto RootName = InStr.RightChop(1);
+	RootName = RootName.Left(RootName.Find("/"));
+	
+	if (!RootName.Equals("Game") && IPluginManager::Get().FindPlugin(RootName) == nullptr)
+	{
+		FPluginUtils::FNewPluginParamsWithDescriptor CreationParams;
+		CreationParams.Descriptor.FriendlyName = RootName;
+		CreationParams.Descriptor.VersionName = "1.0";
+		CreationParams.Descriptor.Version = 1;
+		CreationParams.Descriptor.Category = "Fortnite Porting";
+		CreationParams.Descriptor.CreatedBy = "Fortnite Porting";
+		CreationParams.Descriptor.CreatedByURL = "https://github.com/halfuwu/FortnitePortingServerUnreal";
+		CreationParams.Descriptor.Description = RootName + " Content Plugin";
+		CreationParams.Descriptor.bCanContainContent = true;
+
+		FPluginUtils::FLoadPluginParams LoadParams;
+		LoadParams.bEnablePluginInProject = true;
+		LoadParams.bUpdateProjectPluginSearchPath = true;
+		LoadParams.bSelectInContentBrowser = true;
+
+		FPluginUtils::CreateAndLoadNewPlugin(RootName, FPaths::ProjectPluginsDir(), CreationParams, LoadParams);
+	}
+	
 	FString Path;
 	FString ObjectName;
 	InStr.Split(".", &Path, &ObjectName);
-
-	const auto bIsGameFeatureFixNeeded = !Path.StartsWith("/Game");
 
 	FString Folder;
 	FString PackageName;
@@ -133,51 +154,34 @@ auto FUtils::SplitExportPath(const FString& InStr)
 		FString Path;
 		FString ObjectName;
 		FString Folder;
-		
-		bool bIsGameFeatureFixNeeded;
-		FString GameFeatureFixPath;
-		FString GameFeatureFixFolder;
-
-		FString GetUnrealPath()
-		{
-			return bIsGameFeatureFixNeeded ? GameFeatureFixPath : Path;
-		}
-
-		FString GetUnrealFolder()
-		{
-			return bIsGameFeatureFixNeeded ? GameFeatureFixFolder : Folder;
-		}
 	};
 	
 	return FSplitResult {
 		Path,
 		ObjectName,
-		Folder,
-		bIsGameFeatureFixNeeded,
-		"/Game" + Path,
-		"/Game" + Folder
+		Folder
 	};
 }
 
 UObject* FUtils::ImportMesh(const FExportMesh& Mesh)
 {
-	auto SplitMeshData = SplitExportPath(Mesh.MeshPath);
+	auto [Path, ObjectName, Folder] = SplitExportPath(Mesh.MeshPath);
 
 	TMap<FString, FString> MaterialNameToPathMap;
 	for (auto Material : Mesh.Materials)
 	{
-		auto SplitMatData = SplitExportPath(Material.MaterialPath);
-		MaterialNameToPathMap.Add(Material.MaterialName, SplitMatData.GetUnrealFolder());
+		auto [MatPath, MatObjectName, MatFolder] = SplitExportPath(Material.MaterialPath);
+		MaterialNameToPathMap.Add(Material.MaterialName, MatFolder);
 	}
 	
-	auto MeshPath = FPaths::Combine(CurrentExport.AssetsRoot, SplitMeshData.Path + "_LOD0");
+	auto MeshPath = FPaths::Combine(CurrentExport.AssetsRoot, Path + "_LOD0");
 	if (FPaths::FileExists(MeshPath + ".psk"))
 	{
-		return UPskFactory::Import(MeshPath + ".psk", CreatePackage(*SplitMeshData.GetUnrealFolder()), FName(*SplitMeshData.ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
+		return UPskFactory::Import(MeshPath + ".psk", CreatePackage(*Folder), FName(*ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
 	}
 	if (FPaths::FileExists(MeshPath + ".pskx"))
 	{
-		return UPskxFactory::Import(MeshPath + ".pskx", CreatePackage(*SplitMeshData.GetUnrealFolder()), FName(*SplitMeshData.ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
+		return UPskxFactory::Import(MeshPath + ".pskx", CreatePackage(*Folder), FName(*ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
 	}
 	
 	return nullptr;
@@ -185,12 +189,12 @@ UObject* FUtils::ImportMesh(const FExportMesh& Mesh)
 
 void FUtils::ImportMaterial(const FExportMaterial& Material)
 {
-	auto SplitMatData = SplitExportPath(Material.MaterialPath);
-	const auto PathPackage = CreatePackage(*SplitMatData.GetUnrealPath());
-	auto MaterialInstance = LoadObject<UMaterialInstanceConstant>(PathPackage, *SplitMatData.ObjectName);
+	auto [Path, ObjectName, Folder] = SplitExportPath(Material.MaterialPath);
+	const auto MatPackage = CreatePackage(*Path);
+	auto MaterialInstance = LoadObject<UMaterialInstanceConstant>(MatPackage, *ObjectName);
 	if (MaterialInstance == nullptr)
 	{
-		MaterialInstance = NewObject<UMaterialInstanceConstant>(PathPackage, *SplitMatData.ObjectName);
+		MaterialInstance = NewObject<UMaterialInstanceConstant>(MatPackage, *ObjectName);
 	}
 	MaterialInstance->Parent = FFortnitePortingModule::DefaultMaterial;
 
@@ -215,6 +219,14 @@ void FUtils::ImportMaterial(const FExportMaterial& Material)
 			MaterialInstance->SetTextureParameterValueEditorOnly(FMaterialParameterInfo("M", GlobalParameter), Texture);
 		}
 	}
+
+	MaterialInstance->MarkPackageDirty();
+	FAssetRegistryModule::AssetCreated(MaterialInstance);
+	MaterialInstance->PreEditChange(nullptr);
+	MaterialInstance->PostEditChange();
+	MatPackage->FullyLoad();
+	
+	FGlobalComponentReregisterContext RecreateComponents;
 }
 
 UTexture* FUtils::ImportTexture(const FTextureParameter& Texture)
@@ -226,12 +238,12 @@ UTexture* FUtils::ImportTexture(const FTextureParameter& Texture)
 	Factory->NoCompression = true;
 	Factory->AutomatedImportData = AutomatedData;
 		
-	auto SplitTexData = SplitExportPath(Texture.Value);
-	const auto TexturePath = FPaths::Combine(CurrentExport.AssetsRoot, SplitTexData.Path + ".png");
-	const auto TexturePackage = CreatePackage(*SplitTexData.GetUnrealPath());
+	auto [Path, ObjectName, Folder] = SplitExportPath(Texture.Value);
+	const auto TexturePath = FPaths::Combine(CurrentExport.AssetsRoot, Path + ".png");
+	const auto TexturePackage = CreatePackage(*Path);
 		
 	bool bCancelled;
-	const auto ImportedTexture = Cast<UTexture2D>(Factory->FactoryCreateFile(UTexture2D::StaticClass(), TexturePackage, FName(*SplitTexData.ObjectName), RF_Public | RF_Standalone, TexturePath, nullptr, GWarn, bCancelled));
+	const auto ImportedTexture = Cast<UTexture2D>(Factory->FactoryCreateFile(UTexture2D::StaticClass(), TexturePackage, FName(*ObjectName), RF_Public | RF_Standalone, TexturePath, nullptr, GWarn, bCancelled));
 	ImportedTexture->SRGB = Texture.sRGB;
 	ImportedTexture->CompressionSettings = Texture.CompressionSettings;
 

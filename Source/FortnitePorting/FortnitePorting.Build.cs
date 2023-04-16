@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 using UnrealBuildTool;
 
 public class FortnitePorting : ModuleRules
@@ -7,32 +5,23 @@ public class FortnitePorting : ModuleRules
 	public FortnitePorting(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
-		PublicIncludePaths.AddRange(
-			new string[]
-			{
-				// ... add public include paths required here ...
-			}
-		);
-		
-		PrivateIncludePaths.AddRange(
-			new string[]
-			{
-				// ... add other private include paths required here ...
-			}
-		);
 		
 		PublicDependencyModuleNames.AddRange(
-			new string[]
+			new[]
 			{
-				"Core", "Networking", "Json", "JsonUtilities", "UnrealPSKPSA", "Engine"
-				// ... add other public dependencies that you statically link with here ...
+				"Core", 
+				"Networking", 
+				"Json", 
+				"JsonUtilities", 
+				"UnrealPSKPSA", 
+				"Engine", 
+				"PluginUtils",
+				"Projects"
 			}
 		);
-
-
+		
 		PrivateDependencyModuleNames.AddRange(
-			new string[]
+			new[]
 			{
 				"CoreUObject",
 				"Engine",
@@ -41,14 +30,9 @@ public class FortnitePorting : ModuleRules
 				"Sockets",
 				"Networking",
 				"UnrealPSKPSA",
-				"UnrealEd", "EditorScriptingUtilities"
-			}
-		);
-
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				// ... add any modules that your module loads dynamically here ...
+				"UnrealEd", 
+				"EditorScriptingUtilities", 
+				"PluginUtils"
 			}
 		);
 	}
