@@ -15,6 +15,7 @@
 #include "Factories/TextureFactory.h"
 #include "Interfaces/IPluginManager.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Misc/ScopedSlowTask.h"
 
 void FUtils::ImportResponse(const FString& Response)
 {
@@ -38,11 +39,21 @@ void FUtils::ImportResponse(const FString& Response)
 		//auto Settings = Export.Settings;
 		auto BaseData = Export.Data;
 
+		FScopedSlowTask ImportTask(BaseData.Num(), FText::FromString("Importing Fortnite Porting Responses"));
+		ImportTask.MakeDialog(true);
+		auto ResponseIndex = 0;
 		for (const auto Data : BaseData)
 		{
+			ResponseIndex++;
+			if (ImportTask.ShouldCancel())
+				break;
+			
 			auto Name = Data.Name;
 			auto Type = Data.Type;
 			UE_LOG(LogFortnitePorting, Log, TEXT("Received Import for %s: %s"), *Type, *Name)
+
+			ImportTask.DefaultMessage = FText::FromString(FString::Printf(TEXT("Importing %s: %s (%d of %d)"), *Type, *Name, ResponseIndex, BaseData.Num()));
+			ImportTask.EnterProgressFrame();
 			
 			if (Type.Equals("Dance"))
 			{
@@ -121,7 +132,7 @@ auto FUtils::SplitExportPath(const FString& InStr)
 	auto RootName = InStr.RightChop(1);
 	RootName = RootName.Left(RootName.Find("/"));
 	
-	if (!RootName.Equals("Game") && IPluginManager::Get().FindPlugin(RootName) == nullptr)
+	if (!RootName.Equals("Game") && !RootName.Equals("Engine") && IPluginManager::Get().FindPlugin(RootName) == nullptr)
 	{
 		FPluginUtils::FNewPluginParamsWithDescriptor CreationParams;
 		CreationParams.Descriptor.FriendlyName = RootName;
@@ -218,6 +229,10 @@ void FUtils::ImportMaterial(const FExportMaterial& Material)
 		{
 			MaterialInstance->SetTextureParameterValueEditorOnly(FMaterialParameterInfo("M", GlobalParameter), Texture);
 		}
+		else if (TextureParameter.Name.Equals("Emissive"))
+        {
+        	MaterialInstance->SetTextureParameterValueEditorOnly(FMaterialParameterInfo("Emissive", GlobalParameter), Texture);
+        }
 	}
 
 	MaterialInstance->MarkPackageDirty();
