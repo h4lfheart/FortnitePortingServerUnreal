@@ -18,16 +18,20 @@
 		{
 			"Name": "FortnitePorting",
 			"Type": "Editor",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"PluginUtils",
-				"EditorScriptingUtilities"
-			]
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "UnrealPSKPSA",
+			"Enabled": true
+		},
+		{
+			"Name": "PluginUtils",
+			"Enabled": true
+		},
+		{
+			"Name": "EditorScriptingUtilities",
 			"Enabled": true
 		}
 	]
