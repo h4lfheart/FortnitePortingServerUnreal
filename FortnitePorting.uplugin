@@ -18,7 +18,11 @@
 		{
 			"Name": "FortnitePorting",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"PluginUtils",
+				"EditorScriptingUtilities"
+			]
 		}
 	],
 	"Plugins": [
