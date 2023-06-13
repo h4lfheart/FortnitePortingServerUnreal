@@ -1,6 +1,7 @@
-﻿#include "ListenServer.h"
+﻿#include "FortnitePorting/Import/Public/ListenServer.h"
 #include "SocketSubsystem.h"
 #include "Common/UdpSocketBuilder.h"
+#include "FortnitePorting/Import/Public/ImportUtils.h"
 #include "FortnitePorting/Public/Utils.h"
 
 FListenServer::FListenServer()
@@ -28,7 +29,7 @@ uint32 FListenServer::Run()
 	FIPv4Endpoint Endpoint;
 	FIPv4Endpoint::Parse(TEXT("127.0.0.1:24281"), Endpoint);
 
-	const auto BufferSize = 1024;
+	constexpr auto BufferSize = 1024;
 	Socket = FUdpSocketBuilder(TEXT("FortnitePortingServerSocket"))
 	         .AsBlocking()
 	         .AsReusable()
@@ -73,7 +74,7 @@ uint32 FListenServer::Run()
 		// auto Uncompressed = FCompression::UncompressMemory(NAME_Gzip, UncompressedContent.GetData(), UncompressedContent.Num(),
 		//                                                    RawData.GetData(), RawData.Num());
 
-		FUtils::ImportResponse(Data);
+		FImportUtils::ImportResponse(Data);
 	}
 
 	return 0;

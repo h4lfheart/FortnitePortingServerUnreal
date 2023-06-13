@@ -1,9 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ExportModel.h"
-#include "ListenServer.h"
-#include "Materials/MaterialInstanceConstant.h"
+#include "FortnitePorting/Import/Public/ListenServer.h"
 #include "Modules/ModuleManager.h"
 
 class UTextureFactory;
@@ -13,7 +11,6 @@ class FFortnitePortingModule : public IModuleInterface
 {
 public:
 	FListenServer* ListenServer;
-	static UMaterial* DefaultMaterial;
 
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;

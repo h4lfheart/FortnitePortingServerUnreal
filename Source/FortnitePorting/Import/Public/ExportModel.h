@@ -47,6 +47,20 @@ struct FVectorParameter
 };
 
 USTRUCT()
+struct FSwitchParameter
+{
+	GENERATED_BODY()
+
+	// BASE
+	UPROPERTY()
+	FString Name;
+	
+	UPROPERTY()
+	bool Value;
+};
+
+
+USTRUCT()
 struct FExportMaterial
 {
 	GENERATED_BODY()
@@ -75,6 +89,9 @@ struct FExportMaterial
 	
 	UPROPERTY()
 	TArray<FVectorParameter> Vectors;
+
+	UPROPERTY()
+	TArray<FSwitchParameter> Switches;
 
 	// OVERRIDE
 	UPROPERTY()
@@ -148,7 +165,20 @@ struct FExportSettings
 {
 	GENERATED_BODY()
 
-	// TODO
+	UPROPERTY()
+	bool ForUEFN;
+
+	UPROPERTY()
+	bool ImportMaterials;
+	
+	UPROPERTY()
+	float AmbientOcclusion;
+	
+	UPROPERTY()
+	float Cavity;
+	
+	UPROPERTY()
+	float Subsurface;
 };
 
 USTRUCT()

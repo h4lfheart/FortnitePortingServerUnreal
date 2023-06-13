@@ -1,14 +1,8 @@
 #include "FortnitePorting.h"
 
-#include "EditorAssetLibrary.h"
-#include "ListenServer.h"
-#include "Factories/TextureFactory.h"
-
 #define LOCTEXT_NAMESPACE "FFortnitePortingModule"
 
 DEFINE_LOG_CATEGORY(LogFortnitePorting);
-
-UMaterial* FFortnitePortingModule::DefaultMaterial = nullptr;
 
 void FFortnitePortingModule::StartupModule()
 {
