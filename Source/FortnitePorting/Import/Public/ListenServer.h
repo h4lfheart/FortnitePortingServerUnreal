@@ -18,4 +18,5 @@ private:
 	FSocket* Socket;
 
 	void PingClient(const FInternetAddr& Destination) const;
+	void PongClient(const FInternetAddr& Destination) const;
 };

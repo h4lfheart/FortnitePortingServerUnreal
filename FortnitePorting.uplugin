@@ -27,6 +27,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "UEFormat",
+			"Enabled": true
+		},
+		{
 			"Name": "PluginUtils",
 			"Enabled": true
 		},

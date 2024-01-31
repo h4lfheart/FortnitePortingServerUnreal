@@ -18,6 +18,14 @@ struct FTextureParameter
 	
 	UPROPERTY()
     TEnumAsByte<TextureCompressionSettings> CompressionSettings;
+
+	FTextureParameter(){
+		Name = "";
+		Value = "";
+		sRGB = true;
+		CompressionSettings = TextureCompressionSettings::TC_Default;
+	}
+
 };
 
 USTRUCT()
@@ -31,6 +39,11 @@ struct FScalarParameter
 	
 	UPROPERTY()
 	float Value;
+
+	FScalarParameter(){
+		Name = "";
+		Value = 0.f;
+	}
 };
 
 USTRUCT()
@@ -44,6 +57,11 @@ struct FVectorParameter
 	
 	UPROPERTY()
 	FLinearColor Value;
+
+	FVectorParameter(){
+		Name = "";
+		Value = FLinearColor();
+	}
 };
 
 USTRUCT()
@@ -57,6 +75,11 @@ struct FSwitchParameter
 	
 	UPROPERTY()
 	bool Value;
+
+	FSwitchParameter(){
+		Name = "";
+		Value = false;
+	}
 };
 
 
@@ -67,19 +90,25 @@ struct FExportMaterial
 
 	// BASE
 	UPROPERTY()
-	FString MaterialPath; // UNREAL ONLY
+	FString Path;
 	
 	UPROPERTY()
-	FString MaterialName;
+	FString Name;
 
 	UPROPERTY()
-	FString MasterMaterialName;
+	FString AbsoluteParent;
 
 	UPROPERTY()
-	int SlotIndex;
+	bool UseGlassMaterial;
+
+	UPROPERTY()
+	bool UseFoliageMaterial;
 	
 	UPROPERTY()
-	int Hash; // Not Needed for UE
+	int Slot; 
+	
+	UPROPERTY()
+	int Hash;
 
 	UPROPERTY()
 	TArray<FTextureParameter> Textures;
@@ -93,9 +122,16 @@ struct FExportMaterial
 	UPROPERTY()
 	TArray<FSwitchParameter> Switches;
 
-	// OVERRIDE
-	UPROPERTY()
-	FString MaterialNameToSwap;
+	FExportMaterial(){
+		Path = "";
+		Name = "";
+		AbsoluteParent = "";
+
+		Slot = 0;
+		Hash = 0;
+		UseGlassMaterial = false;
+		UseFoliageMaterial = false;
+	}
 };
 
 USTRUCT()
@@ -105,15 +141,18 @@ struct FExportMesh
 
 	// BASE
 	UPROPERTY()
-	FString MeshPath;
+	FString Name;
+
+	UPROPERTY()
+	FString Type;
+
+	UPROPERTY()
+	FString Path;
 	
 	UPROPERTY()
 	int NumLods;
 
 	// PART
-	UPROPERTY()
-	FString Part;
-
 	UPROPERTY()
 	FString MorphName;
 
@@ -132,9 +171,14 @@ struct FExportMesh
 	UPROPERTY()
 	TArray<FExportMaterial> OverrideMaterials;
 	
-	// OVERRIDE
-	UPROPERTY()
-	FString MeshToSwap;
+	FExportMesh(){
+		Name = "";
+		Type = "";
+		Path = "";
+
+		NumLods = 0;
+
+	}
 };
 
 
@@ -152,12 +196,12 @@ struct FExportData
 
 	// MESH
 	UPROPERTY()
-	TArray<FExportMesh> Parts;
+	TArray<FExportMesh> Meshes;
 
-	UPROPERTY()
-	TArray<FExportMesh> StyleParts;
-
-	
+	FExportData(){
+		Name = "";
+		Type = "";
+	}
 };
 
 USTRUCT()
@@ -179,6 +223,14 @@ struct FExportSettings
 	
 	UPROPERTY()
 	float Subsurface;
+
+	FExportSettings(){
+		ForUEFN = false;
+		ImportMaterials = true;
+		AmbientOcclusion = 0.f;
+		Cavity = 0.f;
+		Subsurface = 0.0f;
+	}
 };
 
 USTRUCT()
@@ -187,13 +239,17 @@ struct FExport
 	GENERATED_BODY()
 	
 	UPROPERTY()
-	FString AssetsRoot;
+	FString AssetsFolder;
 
 	UPROPERTY()
 	TArray<FExportData> Data;
 
 	UPROPERTY()
 	FExportSettings Settings;
+
+	FExport(){
+		AssetsFolder = "";
+	}
 };
 
 USTRUCT()

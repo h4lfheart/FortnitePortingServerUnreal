@@ -16,7 +16,8 @@ public class FortnitePorting : ModuleRules
 				"UnrealPSKPSA", 
 				"Engine", 
 				"PluginUtils",
-				"Projects"
+				"Projects",
+				"UEFormat"
 			}
 		);
 		

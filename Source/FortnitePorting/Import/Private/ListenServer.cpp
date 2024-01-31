@@ -27,7 +27,7 @@ bool FListenServer::Init()
 uint32 FListenServer::Run()
 {
 	FIPv4Endpoint Endpoint;
-	FIPv4Endpoint::Parse(TEXT("127.0.0.1:24281"), Endpoint);
+	FIPv4Endpoint::Parse(TEXT("127.0.0.1:24002"), Endpoint);
 
 	constexpr auto BufferSize = 1024;
 	Socket = FUdpSocketBuilder(TEXT("FortnitePortingServerSocket"))
@@ -53,20 +53,25 @@ uint32 FListenServer::Run()
 			{
 				// Uncompressed Messages
 				auto ReceivedString = FUtils::BytesToString(RawData, BytesRead);
-				if (ReceivedString.Equals("MessageFinished", ESearchCase::IgnoreCase))
+				if (ReceivedString.Equals("Stop", ESearchCase::IgnoreCase))
 				{
 					break;
+				}
+				if (ReceivedString.Equals("Start", ESearchCase::IgnoreCase))
+				{
+					continue;
 				}
 
 				if (ReceivedString.Equals("Ping", ESearchCase::IgnoreCase))
 				{
-					PingClient(*Address);
+					PongClient(*Address);
 					continue;
 				}
 
 				// TODO GZIP COMPRESSION
+				
 				Data.Append(ReceivedString);
-				PingClient(*Address);
+				PongClient(*Address);
 			}
 		}
 
@@ -91,4 +96,11 @@ void FListenServer::PingClient(const FInternetAddr& Destination) const
 	TArray<uint8> Ping = FUtils::StringToBytes("Ping");
 	auto BytesSent = 0;
 	Socket->SendTo(Ping.GetData(), Ping.Num(), BytesSent, Destination);
+}
+
+void FListenServer::PongClient(const FInternetAddr& Destination) const
+{
+	TArray<uint8> Pong = FUtils::StringToBytes("Pong");
+	auto BytesSent = 0;
+	Socket->SendTo(Pong.GetData(), Pong.Num(), BytesSent, Destination);
 }
