@@ -1,6 +1,11 @@
 ﻿#pragma once
 #include "ExportModel.h"
+#include "Engine/SCS_Node.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Factories/TextureFactory.h"
+
+class USceneComponent;
+class USCS_Node;
 
 class FImportUtils
 {
@@ -9,9 +14,13 @@ public:
 	static UMaterial* GetMaterial();
 	static void ImportResponse(const FString& Response);
 	static auto SplitExportPath(const FString& InStr);
+	static FString GetUEFNExportPath(const FString& Folder);
 	static UObject* ImportMesh(const FExportMesh& Mesh);
 	static void ImportMaterial(const FExportMaterial& Material);
 	static UTexture* ImportTexture(const FTextureParameter& Texture);
+	
+	static UBlueprint* CreateActorBlueprint(FString ActorBlueprintAssetPath);
+	static void GenerateActorComponents(UBlueprint* ActorBlueprint, TMap<FString, FString> StaticMeshAssetPaths, TMap<FString, FString> SkeletalMeshAssetPaths);
 
 	inline static FExport CurrentExport = FExport();
 	
