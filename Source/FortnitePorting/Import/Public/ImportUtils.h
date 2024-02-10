@@ -10,11 +10,12 @@ class USCS_Node;
 class FImportUtils
 {
 public:
+	inline static const FString IMPORT_ROOT_FOLDER = "FortniteGame";
 	static void CheckForDependencies();
 	static UMaterial* GetMaterial();
 	static void ImportResponse(const FString& Response);
 	static auto SplitExportPath(const FString& InStr);
-	static FString GetUEFNExportPath(const FString& Folder);
+	static FString WrapPathWithImportRootFolder(const FString& Folder);
 	static UObject* ImportMesh(const FExportMesh& Mesh);
 	static void ImportMaterial(const FExportMaterial& Material);
 	static UTexture* ImportTexture(const FTextureParameter& Texture);

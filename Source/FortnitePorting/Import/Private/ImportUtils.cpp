@@ -50,11 +50,11 @@ UMaterial* FImportUtils::GetMaterial()
 	return CurrentExport.Settings.ForUEFN ? UEFNMaterial : DefaultMaterial;
 }
 
-FString FImportUtils::GetUEFNExportPath(const FString& Folder)
+FString FImportUtils::WrapPathWithImportRootFolder(const FString& Folder)
 {
 	FString RelativePath;
-	Folder.Split(TEXT("/Game/"),nullptr, &RelativePath);
-	return "/Game/UEFN/" + RelativePath;
+	Folder.Split(TEXT("/Game/"), nullptr, &RelativePath);
+	return "/Game/" + IMPORT_ROOT_FOLDER + "/" + RelativePath;
 }
 
 auto FImportUtils::SplitExportPath(const FString& InStr)
@@ -178,7 +178,7 @@ void FImportUtils::ImportResponse(const FString& Response)
 						for (auto Material : Mesh.Materials)
 						{
 							auto [MatPath, MatObjectName, MatFolder] = SplitExportPath(Material.Path);
-							MaterialNameToPathMap.Add(Material.Name, GetUEFNExportPath(MatFolder));
+							MaterialNameToPathMap.Add(Material.Name, WrapPathWithImportRootFolder(MatFolder));
 						}
 
 						UStaticMesh * StaticMesh = Cast<UStaticMesh>(Imported);
@@ -247,7 +247,7 @@ void FImportUtils::ImportResponse(const FString& Response)
 					}
 
 					// Create actor and setup blueprint
-					FString ImportAssetPath = "/Game/UEFN/Blueprints";
+					FString ImportAssetPath = "/Game/" + IMPORT_ROOT_FOLDER + "/Blueprints";
 					FString ActorBlueprintName = "BP_" + UPackageTools::SanitizePackageName(*Name);
 					FString ActorAssetPath = FPaths::Combine(ImportAssetPath, ActorBlueprintName);
 
@@ -280,7 +280,7 @@ void FImportUtils::GenerateActorComponents(UBlueprint* ActorBlueprint, TMap<FStr
 		FString ComponentName = SkeletalMeshAssetPath.Key;
 		FString ComponentAssetPath = SkeletalMeshAssetPath.Value;
 		auto [Path, ObjectName, Folder] = SplitExportPath(ComponentAssetPath);
-		Path = GetUEFNExportPath(Path);
+		Path = WrapPathWithImportRootFolder(Path);
 
 		FBlueprintUtils::AddSkeletalMeshComponentToBlueprint(BPPath,ComponentName,"Root",Path);
 	}
@@ -290,7 +290,7 @@ void FImportUtils::GenerateActorComponents(UBlueprint* ActorBlueprint, TMap<FStr
 		FString ComponentName = StaticMeshAssetPath.Key;
 		FString ComponentAssetPath = StaticMeshAssetPath.Value;
 		auto [Path, ObjectName, Folder] = SplitExportPath(ComponentAssetPath);
-		Path = GetUEFNExportPath(Path);
+		Path = WrapPathWithImportRootFolder(Path);
 
 		FBlueprintUtils::AddStaticMeshComponentToBlueprint(BPPath,ComponentName,"Root",Path);
 	}
@@ -340,15 +340,15 @@ UBlueprint* FImportUtils::CreateActorBlueprint(FString ActorBlueprintAssetPath)
 UObject* FImportUtils::ImportMesh(const FExportMesh& Mesh)
 {
 	auto [Path, ObjectName, Folder] = SplitExportPath(Mesh.Path);
-	FString UEFNPath = GetUEFNExportPath(Path);
+	FString ImportPath = WrapPathWithImportRootFolder(Path);
 
 
 	TMap<FString, FString> MaterialNameToPathMap;
 	for (auto Material : Mesh.Materials)
 	{
 		auto [MatPath, MatObjectName, MatFolder] = SplitExportPath(Material.Path);
-		FString UEFNMatFolder = GetUEFNExportPath(MatFolder);
-		MaterialNameToPathMap.Add(Material.Name, UEFNMatFolder);
+		FString ImportMatFolder = WrapPathWithImportRootFolder(MatFolder);
+		MaterialNameToPathMap.Add(Material.Name, ImportMatFolder);
 	}
    
 	auto SourceMeshPath = FPaths::Combine(CurrentExport.AssetsFolder, Path);
@@ -366,7 +366,7 @@ UObject* FImportUtils::ImportMesh(const FExportMesh& Mesh)
    
 	if (FPaths::FileExists(SourceMeshPath + ".uemodel"))
 	{
-		return UEModelFactory::Import(SourceMeshPath + ".uemodel", UEFNPath, FName(*ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
+		return UEModelFactory::Import(SourceMeshPath + ".uemodel", ImportPath, FName(*ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
 	}
 
 
@@ -381,9 +381,9 @@ void FImportUtils::ImportMaterial(const FExportMaterial& Material)
    
 	auto [Path, ObjectName, Folder] = SplitExportPath(Material.Path);
 
-	FString UEFNPath = GetUEFNExportPath(Path);
+	FString ImportPath = WrapPathWithImportRootFolder(Path);
    
-	const auto MatPackage = CreatePackage(*UEFNPath);
+	const auto MatPackage = CreatePackage(*ImportPath);
 
 	auto MaterialInstance = LoadObject<UMaterialInstanceConstant>(MatPackage, *ObjectName);
 	if (MaterialInstance == nullptr)
@@ -447,10 +447,10 @@ UTexture* FImportUtils::ImportTexture(const FTextureParameter& Texture)
 	auto [Path, ObjectName, Folder] = SplitExportPath(Texture.Value);
 	if (Path.StartsWith("/Engine")) return nullptr;
 
-	FString UEFNPath = GetUEFNExportPath(Path);
+	FString ImportPath = WrapPathWithImportRootFolder(Path);
 	
 	const auto TexturePath = FPaths::Combine(CurrentExport.AssetsFolder, Path + ".png");
-	const auto TexturePackage = CreatePackage(*UEFNPath);
+	const auto TexturePackage = CreatePackage(*ImportPath);
 
 	const auto ExistingTexture = LoadObject<UTexture2D>(TexturePackage, *ObjectName);
 	if (ExistingTexture != nullptr) return ExistingTexture;
