@@ -19,6 +19,7 @@ public:
 	static void ImportResponse(const FString& Response);
 	static auto SplitExportPath(const FString& InStr);
 	static FString WrapPathWithImportRootFolder(const FString& Folder);
+	static void InsertUniqueKeyToFStringFStringMap(TMap<FString, FString>& Map, FString Key, FString Value);
 	static UObject* ImportMesh(const FExportMesh& Mesh);
 	static void ImportMaterial(const FExportMaterial& Material);
 	static UTexture* ImportTexture(const FTextureParameter& Texture);

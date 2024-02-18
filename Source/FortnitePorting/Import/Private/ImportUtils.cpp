@@ -54,7 +54,44 @@ FString FImportUtils::WrapPathWithImportRootFolder(const FString& Folder)
 	}
 
 	return Folder;
+}
+
+void FImportUtils::InsertUniqueKeyToFStringFStringMap(TMap<FString, FString>& Map, FString Key, FString Value)
+{
+	int NextIndex = -1;
 	
+	for (const auto& MapItem : Map)
+	{
+		FString ItemKey = MapItem.Key;
+		
+		if(ItemKey == Key)
+		{
+			if (NextIndex < 0)
+			{
+				NextIndex = 1;
+			}
+		}
+		else if(ItemKey.StartsWith(*Key, true))
+		{
+			FString Remainder = ItemKey.Replace(*Key, TEXT(""));
+			int CurrentIndex = FCString::Atoi(*Remainder);
+
+			if(CurrentIndex + 1 > NextIndex)
+			{
+				NextIndex = CurrentIndex + 1;
+			}
+		}
+	}
+
+	if (NextIndex > 0)
+	{
+		FString NextKey = Key + FString::FromInt(NextIndex);
+		Map.Add(NextKey, Value);
+	}
+	else
+	{
+		Map.Add(Key, Value);
+	}
 }
 
 auto FImportUtils::SplitExportPath(const FString& InStr)
@@ -114,7 +151,6 @@ void FImportUtils::ImportResponse(const FString& Response)
 	}
 
 	CheckForDependencies();
-
 	CurrentExport = Export;
 
 	auto AssetsRoot = Export.AssetsFolder;
@@ -170,16 +206,16 @@ void FImportUtils::ImportResponse(const FString& Response)
 					{
 						if (StaticMesh != nullptr)
 						{
-							StaticMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
+							InsertUniqueKeyToFStringFStringMap(StaticMeshAssetPaths, Mesh.Name, Mesh.Path);
 						}
 						else if (SkeletalMesh != nullptr)
 						{
-							SkeletalMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
+							InsertUniqueKeyToFStringFStringMap(SkeletalMeshAssetPaths, Mesh.Name, Mesh.Path);
 						}
 						continue;
 					}
 
-					ImportedParts.Add(Mesh.Type, FPartData(Imported, Mesh));
+					ImportedParts.Add(Mesh.Name, FPartData(Imported, Mesh));
 					
 					for (auto Material : Mesh.Materials)
 					{
@@ -223,7 +259,7 @@ void FImportUtils::ImportResponse(const FString& Response)
 						FString StaticMeshPackageFileName = FPackageName::LongPackageNameToFilename(StaticMesh->GetPackage()->GetPathName(), FPackageName::GetAssetPackageExtension());
 						UPackage::SavePackage(StaticMesh->GetPackage(), StaticMesh, *StaticMeshPackageFileName, SaveArgs);
 
-						StaticMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
+						InsertUniqueKeyToFStringFStringMap(StaticMeshAssetPaths, Mesh.Name, Mesh.Path);
 					}
 
 					else if (SkeletalMesh != nullptr)
@@ -253,9 +289,8 @@ void FImportUtils::ImportResponse(const FString& Response)
 						FString SkeletalMeshPackageFileName = FPackageName::LongPackageNameToFilename(SkeletalMesh->GetPackage()->GetPathName(), FPackageName::GetAssetPackageExtension());
 						UPackage::SavePackage(SkeletalMesh->GetPackage(), SkeletalMesh, *SkeletalMeshPackageFileName, SaveArgs);
 
-						SkeletalMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
+						InsertUniqueKeyToFStringFStringMap(SkeletalMeshAssetPaths, Mesh.Name, Mesh.Path);
 					}
-					
 				}
 				
 				// Create actor and setup blueprint
