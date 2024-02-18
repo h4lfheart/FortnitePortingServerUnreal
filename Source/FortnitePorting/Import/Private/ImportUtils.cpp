@@ -59,12 +59,12 @@ FString FImportUtils::WrapPathWithImportRootFolder(const FString& Folder)
 void FImportUtils::InsertUniqueKeyToFStringFStringMap(TMap<FString, FString>& Map, FString Key, FString Value)
 {
 	int NextIndex = -1;
-	
+
 	for (const auto& MapItem : Map)
 	{
 		FString ItemKey = MapItem.Key;
 		
-		if(ItemKey == Key)
+		if(ItemKey.Equals(Key))
 		{
 			if (NextIndex < 0)
 			{
@@ -76,7 +76,7 @@ void FImportUtils::InsertUniqueKeyToFStringFStringMap(TMap<FString, FString>& Ma
 			FString Remainder = ItemKey.Replace(*Key, TEXT(""));
 			int CurrentIndex = FCString::Atoi(*Remainder);
 
-			if(CurrentIndex + 1 > NextIndex)
+			if(CurrentIndex > 0 && CurrentIndex + 1 > NextIndex)
 			{
 				NextIndex = CurrentIndex + 1;
 			}
