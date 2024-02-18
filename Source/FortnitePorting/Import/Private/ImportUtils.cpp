@@ -160,6 +160,25 @@ void FImportUtils::ImportResponse(const FString& Response)
 						continue;
 					}
 
+					UStaticMesh * StaticMesh = Cast<UStaticMesh>(Imported);
+					USkeletalMesh * SkeletalMesh = Cast<USkeletalMesh>(Imported);
+
+					auto RootName = Mesh.Path.RightChop(1);
+					RootName = RootName.Left(RootName.Find("/"));
+
+					if (RootName == "Engine")
+					{
+						if (StaticMesh != nullptr)
+						{
+							StaticMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
+						}
+						else if (SkeletalMesh != nullptr)
+						{
+							SkeletalMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
+						}
+						continue;
+					}
+
 					ImportedParts.Add(Mesh.Type, FPartData(Imported, Mesh));
 					
 					for (auto Material : Mesh.Materials)
@@ -174,9 +193,6 @@ void FImportUtils::ImportResponse(const FString& Response)
 						auto [MatPath, MatObjectName, MatFolder] = SplitExportPath(Material.Path);
 						MaterialNameToPathMap.Add(Material.Name, WrapPathWithImportRootFolder(MatFolder));
 					}
-
-					UStaticMesh * StaticMesh = Cast<UStaticMesh>(Imported);
-					USkeletalMesh * SkeletalMesh = Cast<USkeletalMesh>(Imported);
 
 					FSavePackageArgs SaveArgs;
 					SaveArgs.TopLevelFlags = RF_Standalone | RF_Public;
@@ -195,7 +211,7 @@ void FImportUtils::ImportResponse(const FString& Response)
 							UMaterialInterface * Material = Cast<UMaterialInterface>(StaticLoadObject(UObject::StaticClass(), nullptr, *MaterialPackagePath));
 
 							if(Material == nullptr){
-								UE_LOG(LogFortnitePorting, Error, TEXT("Static Mesh Material not found at: %s"),*MaterialPackagePath);
+								UE_LOG(LogFortnitePorting, Error, TEXT("Static Mesh Material not found at: %s"), *MaterialPackagePath);
 							}
 
 							StaticMesh->SetMaterial(i, Material);
@@ -210,7 +226,7 @@ void FImportUtils::ImportResponse(const FString& Response)
 						StaticMeshAssetPaths.Add(Mesh.Name, Mesh.Path);
 					}
 
-					if (SkeletalMesh != nullptr)
+					else if (SkeletalMesh != nullptr)
 					{	
 						SkeletalMesh->Modify();
 						SkeletalMesh->PreEditChange(nullptr);
@@ -335,6 +351,23 @@ UObject* FImportUtils::ImportMesh(const FExportMesh& Mesh)
 	auto [Path, ObjectName, Folder] = SplitExportPath(Mesh.Path);
 	FString ImportPath = WrapPathWithImportRootFolder(Path);
 
+	const auto ExistingMesh = StaticLoadObject(UObject::StaticClass(), nullptr, *ImportPath);
+
+	if(ExistingMesh != nullptr)
+	{
+		UStaticMesh * StaticMesh = Cast<UStaticMesh>(ExistingMesh);
+		USkeletalMesh * SkeletalMesh = Cast<USkeletalMesh>(ExistingMesh);
+
+		if (StaticMesh != nullptr)
+		{
+			return StaticMesh;
+		}
+		else if (SkeletalMesh != nullptr)
+		{
+			return SkeletalMesh;
+		}
+	}
+
 	TMap<FString, FString> MaterialNameToPathMap;
 	for (auto Material : Mesh.Materials)
 	{
@@ -361,7 +394,6 @@ UObject* FImportUtils::ImportMesh(const FExportMesh& Mesh)
 		return UEModelFactory::Import(SourceMeshPath + ".uemodel", ImportPath, FName(*ObjectName), RF_Public | RF_Standalone, MaterialNameToPathMap);
 	}
 
-
 	UE_LOG(LogFortnitePorting, Error, TEXT("Unsupported mesh format: %s"),*Mesh.Path);
    
 	return nullptr;
@@ -374,6 +406,14 @@ void FImportUtils::ImportMaterial(const FExportMaterial& Material)
 	auto [Path, ObjectName, Folder] = SplitExportPath(Material.Path);
 	
 	FString ImportPath = WrapPathWithImportRootFolder(Path);
+
+	const auto ExistingMaterialInstance = StaticLoadObject(UObject::StaticClass(), nullptr, *ImportPath);
+	
+	if (ExistingMaterialInstance != nullptr)
+	{
+		UE_LOG(LogFortnitePorting, Warning, TEXT("MaterialInstance already exists at %s"), *ImportPath);
+		return;
+	}
    
 	const auto MatPackage = CreatePackage(*ImportPath);
 
