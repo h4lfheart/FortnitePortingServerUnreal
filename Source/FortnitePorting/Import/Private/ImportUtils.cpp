@@ -504,10 +504,7 @@ void FImportUtils::ImportMaterial(const FExportMaterial& Material)
 	SaveArgs.TopLevelFlags = RF_Standalone | RF_Public;
 	UPackage::SavePackage(MatPackage, MaterialInstance, *PackageFileName, SaveArgs);
 
-	MatPackage->FullyLoad();
-   
-	// FGlobalComponentReregisterContext RecreateComponents;
-	
+	MatPackage->FullyLoad();	
 }
 
 UTexture* FImportUtils::ImportTexture(const FTextureParameter& Texture)
