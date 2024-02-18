@@ -2,10 +2,13 @@
 #include "ExportModel.h"
 #include "Engine/SCS_Node.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Factories/TextureFactory.h"
+#include "AssetImportTask.h"
+
 
 class USceneComponent;
 class USCS_Node;
+class UAssetImportTask;
+class UFactory;
 
 class FImportUtils
 {
@@ -27,8 +30,11 @@ public:
 	
 	inline static UMaterial* DefaultMaterial;
 	inline static UMaterial* UEFNMaterial;
-	inline static UTextureFactory* TextureFactory;
-	
+
+	static UAssetImportTask* CreateImportTask(FString SourcePath, FString DestinationPath, UFactory* ExtraFactory, UObject* ExtraOptions);
+	static UObject* ProcessImportTask(UAssetImportTask* ImportTask);
+	static UObject* ImportAsset(FString SourcePath, FString DestinationPath);
+
 	inline static TMap<FString, FString> TextureMappings = {
 		{"Diffuse", "Diffuse"},
 		{"PM_Diffuse", "Diffuse"},
