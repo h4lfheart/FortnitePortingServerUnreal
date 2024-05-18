@@ -37,6 +37,10 @@
 		{
 			"Name": "EditorScriptingUtilities",
 			"Enabled": true
-		}
+		},
+		{
+			"Name": "RemoteControl",
+			"Enabled": true
+		}		
 	]
 }
