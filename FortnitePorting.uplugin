@@ -41,6 +41,10 @@
 		{
 			"Name": "RemoteControl",
 			"Enabled": true
-		}		
+		},
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
+		}
 	]
 }
