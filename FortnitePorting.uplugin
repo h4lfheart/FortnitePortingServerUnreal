@@ -27,11 +27,23 @@
 			"Enabled": true
 		},
 		{
+			"Name": "UEFormat",
+			"Enabled": true
+		},
+		{
 			"Name": "PluginUtils",
 			"Enabled": true
 		},
 		{
 			"Name": "EditorScriptingUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "RemoteControl",
+			"Enabled": true
+		},
+		{
+			"Name": "PythonScriptPlugin",
 			"Enabled": true
 		}
 	]

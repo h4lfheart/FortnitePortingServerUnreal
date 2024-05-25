@@ -9,6 +9,7 @@ public class FortnitePorting : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new[]
 			{
+				"Engine",
 				"Core", 
 				"Networking", 
 				"Json", 
@@ -16,7 +17,8 @@ public class FortnitePorting : ModuleRules
 				"UnrealPSKPSA", 
 				"Engine", 
 				"PluginUtils",
-				"Projects"
+				"Projects",
+				"UEFormat",
 			}
 		);
 		
@@ -32,7 +34,9 @@ public class FortnitePorting : ModuleRules
 				"UnrealPSKPSA",
 				"UnrealEd", 
 				"EditorScriptingUtilities", 
-				"PluginUtils"
+				"PluginUtils",
+				"PythonScriptPlugin",
+				"AssetTools",
 			}
 		);
 	}
